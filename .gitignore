@@ -3,6 +3,14 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Mac files
+.DS_Store
+
+
+# VSCode Folder
+.vscode/
+
+
 # C extensions
 *.so
 

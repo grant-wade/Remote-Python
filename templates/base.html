@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Remote Python!</title>
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='w3.css') }}">
+        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='index.css') }}">
+        <script type=text/javascript src="{{ url_for('static', filename='jquery-3.2.1.min.js') }}"></script>
+        <script type=text/javascript src="{{ url_for('static', filename='Chart.bundle.min.js') }}"></script>
+        <script type=text/javascript>
+            $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+        </script>
+    </head>
+    <body class="w3-blue">
+        <div class="container">
+            <div class="w3-container">
+                <h1>Remote Python!</h1>
+            </div>
+            <div class="w3-bar w3-black w3-card-4">
+                <a href="{{ url_for('index') }}" class="w3-bar-item w3-button">Home</a>
+                <a href="{{ url_for('jobs') }}" class="w3-bar-item w3-button">Jobs</a>
+                <a href="{{ url_for('sys_info') }}" class="w3-bar-item w3-button">System Information</a>
+            </div>
+            <div class="w3-container w3-white w3-card-4">
+                {% block body %} {% endblock %}
+            </div>
+
+            <div class="w3-container w3-center">
+                <p>Grant Wade (grant.wade@wsu.edu)</p>
+            </div>
+        </div>
+    </body>
+</html>

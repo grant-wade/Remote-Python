@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2>System Information:</h2>
+
+<h4>Processor Core Count: {{ proc_count }}</h4>
+
+<h3>Activiry Monitor</h3>
+<div class="col2-grid">
+    <div class="col2-left">
+        <canvas id="cpu" width="400" height="400"></canvas>
+    </div>
+    
+    <div class="col2-right">
+        <canvas id="memory" width="400" height="400"></canvas>
+    </div>
+</div>
+
+
+<script>
+$(() => {
+    var ctx = $("#cpu");
+    var cpu = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'CPU Usage',
+                pointRadius: 0,
+                backgroundColor: 'rgba(0, 102, 255, 0.2)',
+                borderColor: 'rgba(0, 102, 255, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true,
+                        max: 100
+                    }
+                }]
+            }
+        }
+    });
+
+    var ctx = $("#memory");
+    var mem = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Memory Usage',
+                pointRadius: 0,
+                backgroundColor: 'rgba(255, 80, 80, 0.2)',
+                borderColor: 'rgba(255, 80, 80, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true,
+                        max: 100
+                    }
+                }]
+            }
+        }
+    });
+
+
+    function addData(chart, label, data) {
+        chart.data.labels.push(label);
+        
+        chart.data.datasets.forEach((dataset) => {
+            dataset.data.push(data);
+        });
+        chart.update();
+    }
+    
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function update() {
+        while(true) {
+            await sleep(2000);
+            $.getJSON($SCRIPT_ROOT + '/sys-info/update', {}, (data) => {
+                addData(cpu, '', data.cpu);
+                addData(mem, '', data.mem);
+        });
+        }   
+    }
+    update()
+});
+</script>
+{% endblock %}

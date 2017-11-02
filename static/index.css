@@ -1,0 +1,21 @@
+.container {
+    width: 80%;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+.col2-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(45%, 1fr));
+    grid-gap: 1em;
+}
+
+.col2-left {
+    grid-column: 1 / 2;
+    grid-row: 1 / 2;
+}
+
+.col3-right {
+    grid-column: 2 / 3;
+    grid-row: 1 / 2;
+}
