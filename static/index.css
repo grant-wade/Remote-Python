@@ -4,6 +4,15 @@
     margin-left: auto;
 }
 
+.inputfile {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
+
 .col2-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(45%, 1fr));

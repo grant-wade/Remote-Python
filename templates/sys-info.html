@@ -66,14 +66,21 @@ $(() => {
             }
         }
     });
-
+    var d = new Date();
 
     function addData(chart, label, data) {
-        chart.data.labels.push(label);
-        
+        chart.data.labels.push('');
+        var len = 0;
+        var data_all = chart.data.datasets['0'].data;
+        var data_len = data_all.length;
+        console.log(data_len);
         chart.data.datasets.forEach((dataset) => {
-            dataset.data.push(data);
+                dataset.data.push(data);
         });
+        if (data_len > 50) {
+            data = data.slice(1, data_len - 1)
+            chart.data.datasets['0'].data = data_all;
+        }
         chart.update();
     }
     
@@ -83,11 +90,11 @@ $(() => {
 
     async function update() {
         while(true) {
-            await sleep(2000);
             $.getJSON($SCRIPT_ROOT + '/sys-info/update', {}, (data) => {
                 addData(cpu, '', data.cpu);
                 addData(mem, '', data.mem);
-        });
+            });
+            await sleep(2000);
         }   
     }
     update()
