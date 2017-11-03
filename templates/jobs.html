@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block body %}
+<script>
+    function filelabel() {$('#file-label').html($('#file').val())}
+</script>
 <div>
     <h2>Jobs (Create and view jobs):</h2>
     <button class="w3-margin-bottom w3-button w3-blue" id="newJob">Create New Job</button>
@@ -12,50 +15,16 @@
             Command to run:<br>
             <input class="w3-input" type="text" name="command" id="command"><br>
             Files (Single .py only for now)<br>
-            <input class="inputfile" type=file name="file" id="file">
-            <label for="file" class="w3-button w3-blue"> Choose a file </label><br><br>
+            <input class="inputfile" type=file name="file" id="file" onchange="filelabel()">
+            <label for="file" style="border-radius: 5px;" class="w3-button w3-blue" id="file-label"> Choose a file </label><br><br>
             <input class="w3-button w3-blue" type="submit">
         </form>
     </div>
 
     <h3>Running Jobs:</h3>
-    <div class="w3-padding-16">
-            <table class="w3-table-all w3-hoverable w3-card-2">
-                <tr>
-                    <th>Name</th>
-                    <th>Token</th>
-                    <th>Start Time</th>
-                    <th>Command</th>
-                    <th>Status</th>
-                </tr>
-                {% for index in range(jobs|count) %}
-                    <tr id="{{ jobs[index][1] }}">
-                        <td>{{ jobs[index][0] }}</td>
-                        <td>{{ jobs[index][1] }}</td>
-                        <td>{{ jobs[index][2] }}</td>
-                        <td>{{ jobs[index][3] }}</td>
-                        <td>{{ jobs[index][4] }}</td>
-                    </tr>
-                    <tr id="hide-{{ jobs[index][1] }}">
-                        <td align="center" colspan="5">
-                            <textarea style="width:100%;resize: none;" id="log-{{ jobs[index][1] }}" row=8 col=100 readonly>
+    <button class="w3-margin-bottom w3-button w3-blue" id="refresh">Refresh Table</button>
 
-                            </textarea>
-                        </td>
-                    </tr>
-                    <script>
-                        $(() => {
-                            $('#log-{{ jobs[index][1] }}').html("{{ jobs[index][5] }}");
-                            $('#hide-{{ jobs[index][1] }}').hide();
-
-                            $('#{{ jobs[index][1] }}').on('click', () => {
-                                $('#hide-{{ jobs[index][1] }}').toggle()
-                            });
-                        });
-                    </script>
-                {% endfor %}
-            </table>
-        </div>
+    <div class="w3-padding-16" id="job-table"></div>
 </div>
 
 <script>
@@ -68,6 +37,16 @@ $(() => {
         });
         $('#newjobform').toggle('slow');
     });
+
+    $.post("{{ url_for('jobs_update') }}", {}, (data) => {
+        $('#job-table').html(data)
+    })
+
+    $('#refresh').on('click', () => {
+        $.post("{{ url_for('jobs_update') }}", {}, (data) => {
+            $('#job-table').html(data)
+        });
+    }); 
 });
 </script>
 {% endblock %}

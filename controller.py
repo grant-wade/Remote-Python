@@ -6,6 +6,7 @@ import docker
 
 
 class job_controller:
+    """Job controller class"""
     def __init__(self):
         self.current_token = 0
         self.job_dir = os.getcwd() + '/jobs'

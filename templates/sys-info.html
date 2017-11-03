@@ -5,7 +5,7 @@
 
 <h4>Processor Core Count: {{ proc_count }}</h4>
 
-<h3>Activiry Monitor</h3>
+<h3>Activiry Monitor:</h3>
 <div class="col2-grid">
     <div class="col2-left">
         <canvas id="cpu" width="400" height="400"></canvas>
@@ -69,17 +69,16 @@ $(() => {
     var d = new Date();
 
     function addData(chart, label, data) {
-        chart.data.labels.push('');
-        var len = 0;
         var data_all = chart.data.datasets['0'].data;
         var data_len = data_all.length;
-        console.log(data_len);
-        chart.data.datasets.forEach((dataset) => {
-                dataset.data.push(data);
-        });
         if (data_len > 50) {
-            data = data.slice(1, data_len - 1)
-            chart.data.datasets['0'].data = data_all;
+            chart.data.labels.splice(0, 1);
+            chart.data.labels.push('');
+            chart.data.datasets['0'].data.splice(0, 1);
+            chart.data.datasets['0'].data.push(data);
+        } else {
+            chart.data.labels.push('');
+            chart.data.datasets['0'].data.push(data);
         }
         chart.update();
     }

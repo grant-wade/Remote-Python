@@ -1,22 +1,28 @@
 """Remote Python flask application"""
-# Standard library modules
+# ======================== #
+# Standard library modules #
+# ======================== #
 import os
 import sys
 
-# In-Project module
+# ================= #
+# In-Project module #
+# ================= #
 import fileio
 import controller
 
-# 3rd Party modules
+# ================= #
+# 3rd Party modules #
+# ================= #
 import psutil
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 from werkzeug.utils import secure_filename
 
 # ============================================== #
 # Global variables for flask and other functions #
 # ============================================== #
 PROCS = psutil.cpu_count()
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'py'])
+ALLOWED_EXTENSIONS = set(['py'])
 JOB_CONTROL = controller.job_controller()
 app = Flask(__name__)
 
@@ -28,13 +34,15 @@ app.config['UPLOAD_FOLDER'] = os.getcwd() + '/jobs/'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 
-
 # =============================================== #
 # Create directories for pip cache and user files #
 # =============================================== #
 fileio.create_dirs()
 
 
+# ================================================ #
+# Define flask routes and where they get html from #
+# ================================================ #
 @app.route('/')
 def index():
     """Index page"""
@@ -44,17 +52,38 @@ def index():
 @app.route('/jobs')
 def jobs():
     """Jobs page"""
-    jobs = JOB_CONTROL.get_jobs()
+    all_jobs = JOB_CONTROL.get_jobs()
     output = []
-    for key in jobs:
-        part = [i for i in jobs[key]]
-        # part.append(part[-1].logs())
-        print(part[-1].logs(), file=sys.stderr)
+    for key in all_jobs:
+        part = [i for i in all_jobs[key]]
+        log = part[-1].logs().decode('utf-8')
+        status = part[-1].status
+        print(status, file=sys.stderr)
+        if log == '':
+            part += ["", 1, status]
+        else:
+            len_log = len(log.split('\n'))
+            part += [log, len_log, status]
         output.append(part)
-    print(output, file=sys.stderr)
-
-        
     return render_template('jobs.html', jobs=output)
+
+
+@app.route('/jobs/table', methods=['GET', 'POST'])
+def jobs_update():
+    all_jobs = JOB_CONTROL.get_jobs()
+    output = []
+    for key in all_jobs:
+        part = [i for i in all_jobs[key]]
+        log = part[-1].logs().decode('utf-8')
+        status = part[-1].status
+        print(status, file=sys.stderr)
+        if log == '':
+            part += ["", 1, status]
+        else:
+            len_log = len(log.split('\n'))
+            part += [log, len_log, status]
+        output.append(part)
+    return render_template('job-table.html', jobs=output)
 
 
 @app.route('/sys-info')
@@ -68,7 +97,6 @@ def sys_info_update():
     """Return some system info"""
     cpu = psutil.cpu_percent()
     mem = psutil.virtual_memory().percent
-    # print(cpu, mem, file=sys.stderr)
     return jsonify(cpu=cpu, mem=mem)
 
 
@@ -78,28 +106,9 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    """Used to upload a file to the server host"""
-    # check if the post request has the file part
-    if 'file' not in request.files:
-        print("No file part", file=sys.stderr)
-        return "No file pass"
-    file = request.files['file']
-    # if user does not select file, browser also
-    # submit a empty part without filename
-    if file.filename == '':
-        print('No selected file', file=sys.stderr)
-        return "No file choosen"
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        return redirect(url_for('index', filename=filename))
-    return "File Extension not supported"
-
-
 @app.route('/submit-job', methods=['POST'])
 def submit_job():
+    """Submit a job to run"""
     job_name = request.form['jobTitle']
     command = request.form['command']
     token = JOB_CONTROL.get_current_token()
