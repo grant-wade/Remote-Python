@@ -1,36 +1,37 @@
 <table class="w3-table-all w3-hoverable w3-card-2">
     <tr>
         <th>Name</th>
-        <th>Token</th>
+        <th>Container ID</th>
         <th>Start Time</th>
         <th>Command</th>
         <th>Status</th>
     </tr>
     {% for index in range(jobs|count) %}
-        <tr id="{{ jobs[index][1] }}">
-            <td>{{ jobs[index][0] }}</td>
-            <td>{{ jobs[index][1] }}</td>
-            <td>{{ jobs[index][2] }}</td>
-            <td>{{ jobs[index][3] }}</td>
-            <td>{{ jobs[index][7] }}</td>
+        <tr id="{{ jobs[index]['token'] }}">
+            <td>{{ jobs[index]['name'] }}</td>
+            <td>{{ jobs[index]['id'] }}</td>
+            <td>{{ jobs[index]['stime'] }}</td>
+            <td>{{ jobs[index]['command'] }}</td>
+            <td>{{ jobs[index]['status'] }}</td>
         </tr>
-        <tr style="height:{{ jobs[index][6]*1.45 }}em" id="hide-{{ jobs[index][1] }}">
+        <tr style="height:{{ jobs[index]['log_len']*1.45 }}em" id="hide-{{ jobs[index]['token'] }}">
             <td align="center" colspan="5">
-                <textarea style="width:100%;height:{{ jobs[index][6]*1.45 }}em;
-                resize: none;" id="log-{{ jobs[index][1] }}"
-                row="{{ jobs[index][6] }}" col=100 readonly>
+                <textarea style="width:100%;height:{{ jobs[index]['log_len']*1.45 }}em;
+                resize: none;font-family: monospace;" id="log-{{ jobs[index]['token'] }}"
+                row="{{ jobs[index]['log_len'] }}" col=100 class="console-ele" readonly>
                 </textarea>
             </td>
         </tr>
         <script>
             $(() => {
-                $('#log-{{ jobs[index][1] }}').html(`{{ jobs[index][5] }}`);
-                $('#hide-{{ jobs[index][1] }}').hide();
+                $('#log-{{ jobs[index]["token"] }}').html(`{{ jobs[index]["log"] }}`);
+                $('#hide-{{ jobs[index]["token"] }}').hide();
 
-                $('#{{ jobs[index][1] }}').on('click', () => {
-                    $('#hide-{{ jobs[index][1] }}').toggle()
+                $('#{{ jobs[index]["token"] }}').on('click', () => {
+                    $('#hide-{{ jobs[index]["token"] }}').toggle()
                 });
             });
         </script>
     {% endfor %}
 </table>
+

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+
+<h2>Job-{{ job['token'] }}:</h2>
+<h4>Title: {{ job['name'] }}</h4>
+<h4>Docker ID: {{ job['id'] }}</h4>
+<h4>Status: {{ job['status'] }}</h4>
+<h4>Start Time: {{ job['stime'] }}</h4>
+<h4>Command: {{ job['command'] }}</h4>
+
+<textarea style="width:100%;height:{{ job['log_len']*1.45 }}em;
+resize: none;font-family: monospace;" id="log-{{ job['token'] }}"
+row="{{ job['log_len'] }}" col=100 class="console-ele" readonly>
+</textarea>
+
+<script>
+    $('#log-{{ job["token"] }}').html(`{{ job["log"] }}`);
+</script>
+
+{% endblock %}

@@ -39,6 +39,9 @@ $(() => {
                         max: 100
                     }
                 }]
+            },
+            animation: {
+                duration: 0
             }
         }
     });
@@ -63,6 +66,9 @@ $(() => {
                         max: 100
                     }
                 }]
+            },
+            animation: {
+                duration: 0
             }
         }
     });
@@ -82,21 +88,30 @@ $(() => {
         }
         chart.update();
     }
-    
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+
+    function setData(chart, label, data) {
+        chart.data.labels = [];
+        chart.data.datasets['0'].data = [];
+        data.forEach(function(val) {
+            chart.data.labels.push('');
+            chart.data.datasets['0'].data.push(val);
+        });
+        // console.log(chart.data.datasets['0'].data);
+        chart.update();
     }
 
-    async function update() {
+    async function update_info() {
         while(true) {
             $.getJSON($SCRIPT_ROOT + '/sys-info/update', {}, (data) => {
-                addData(cpu, '', data.cpu);
-                addData(mem, '', data.mem);
+                setData(cpu, '', data.cpu);
+                setData(mem, '', data.mem);
+                // addData(cpu, '', data.cpu);
+                // addData(mem, '', data.mem);
             });
             await sleep(2000);
         }   
     }
-    update()
+    update_info()
 });
 </script>
 {% endblock %}

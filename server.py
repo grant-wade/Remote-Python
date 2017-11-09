@@ -4,6 +4,10 @@
 # ======================== #
 import os
 import sys
+import time
+import threading
+
+from collections import deque
 
 # ================= #
 # In-Project module #
@@ -15,16 +19,18 @@ import controller
 # 3rd Party modules #
 # ================= #
 import psutil
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 from werkzeug.utils import secure_filename
 
 # ============================================== #
 # Global variables for flask and other functions #
 # ============================================== #
-PROCS = psutil.cpu_count()
-ALLOWED_EXTENSIONS = set(['py'])
-JOB_CONTROL = controller.job_controller()
-app = Flask(__name__)
+PROCS = psutil.cpu_count() # Processor Count
+ALLOWED_EXTENSIONS = set(['py', 'sh']) # Allowed files
+JOB_CONTROL = controller.job_controller() # docker controller
+Activity = deque([]) # System activity monitor
+LOCK = threading.Lock() # Threading lock
+app = Flask(__name__) # Flask app
 
 
 # ==================== #
@@ -52,38 +58,48 @@ def index():
 @app.route('/jobs')
 def jobs():
     """Jobs page"""
-    all_jobs = JOB_CONTROL.get_jobs()
-    output = []
-    for key in all_jobs:
-        part = [i for i in all_jobs[key]]
-        log = part[-1].logs().decode('utf-8')
-        status = part[-1].status
-        print(status, file=sys.stderr)
-        if log == '':
-            part += ["", 1, status]
-        else:
-            len_log = len(log.split('\n'))
-            part += [log, len_log, status]
-        output.append(part)
-    return render_template('jobs.html', jobs=output)
+    return render_template('jobs.html')
 
 
-@app.route('/jobs/table', methods=['GET', 'POST'])
+@app.route('/jobs-table', methods=['GET', 'POST'])
 def jobs_update():
     all_jobs = JOB_CONTROL.get_jobs()
     output = []
-    for key in all_jobs:
-        part = [i for i in all_jobs[key]]
-        log = part[-1].logs().decode('utf-8')
-        status = part[-1].status
-        print(status, file=sys.stderr)
+    for token in all_jobs:
+        # part = [i for i in all_jobs[key]]
+        part = all_jobs[token]
+        log = JOB_CONTROL.get_logs(token)
+        status = JOB_CONTROL.get_status(token)
         if log == '':
-            part += ["", 1, status]
+            part['log'] = ""
+            part['log_len'] = 1
+            part['status'] = status
         else:
-            len_log = len(log.split('\n'))
-            part += [log, len_log, status]
+            log_len = len(log.split('\n'))
+            part['log'] = log
+            part['log_len'] = log_len
+            part['status'] = status
         output.append(part)
     return render_template('job-table.html', jobs=output)
+
+
+@app.route('/jobs/<dID>')
+def job_page(dID):
+    job = ''
+    try:
+        job = JOB_CONTROL.get_job_by_id(dID)
+        if job == -1:
+            return "Job not found!"
+    except Exception:
+        return "Job not found!"
+    log = JOB_CONTROL.get_logs(job['token'])
+    log_len = len(log.split('\n'))
+    status = JOB_CONTROL.get_status(job['token'])
+    job['log'] = log
+    job['log_len'] = log_len
+    job['status'] = status
+    return render_template('job-page.html', job=job)
+
 
 
 @app.route('/sys-info')
@@ -95,9 +111,10 @@ def sys_info():
 @app.route('/sys-info/update', methods=['GET'])
 def sys_info_update():
     """Return some system info"""
-    cpu = psutil.cpu_percent()
-    mem = psutil.virtual_memory().percent
-    return jsonify(cpu=cpu, mem=mem)
+    with LOCK:
+        cpu = [ele[0] for ele in Activity]
+        mem = [ele[1] for ele in Activity]
+        return jsonify(cpu=cpu, mem=mem)
 
 
 def allowed_file(filename):
@@ -131,6 +148,7 @@ def submit_job():
 
 @app.route('/get-job-id', methods=['GET'])
 def get_job_id():
+    """Get next job id"""
     return jsonify(id=JOB_CONTROL.get_current_token())
 
 
@@ -140,3 +158,25 @@ def add_numbers():
     a = request.args.get('a', 0, type=int)
     b = request.args.get('b', 0, type=int)
     return jsonify(result=a + b)
+
+
+# =============================== #
+# Setting up the activity monitor #
+# =============================== #
+def activity_monitor(act, lock):
+    """Monitors the system polling in he background"""
+    next_call = time.time()
+    while True:
+        with lock:
+            act.append((psutil.cpu_percent(),
+                        psutil.virtual_memory().percent,
+                        time.time()))
+            if len(act) >= 120:
+                act.popleft()
+        next_call += 1
+        time.sleep(next_call - time.time())
+
+
+Activity_Thread = threading.Thread(target=activity_monitor, args=(Activity, LOCK))
+Activity_Thread.daemon = True
+Activity_Thread.start()
