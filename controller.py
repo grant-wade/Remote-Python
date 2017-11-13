@@ -47,14 +47,14 @@ class job_controller:
 
         # Map directorys and start container
         directory_map = {work_dir_local : {'bind' : work_dir_container, 'mode' : 'rw'},
-                         cache_dir_local : {'bind' : cache_dir_container, 'mode' : 'rw'}}
+                        cache_dir_local : {'bind' : cache_dir_container, 'mode' : 'rw'}}
+
         container = self.client.containers.run("python:slim", command, 
-                volumes=directory_map, working_dir=work_dir_container, 
-                network_mode="host", user=1000, detach=True)
+                        volumes=directory_map, working_dir=work_dir_container, 
+                        network_mode="host", user=1000, detach=True)
 
         self.jobs[token] = {'name': name, 'token': token, 'id': container.short_id,
-                            'stime': time.strftime("%c"), 'command': command, 
-                            'container': container}
+                            'stime': time.strftime("%c"), 'command': command, 'container': container}
 
 
     def get_logs(self, token):

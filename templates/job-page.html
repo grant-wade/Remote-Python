@@ -15,6 +15,12 @@ row="{{ job['log_len'] }}" col=100 class="console-ele" readonly>
 
 <script>
     $('#log-{{ job["token"] }}').html(`{{ job["log"] }}`);
+    
+    async function update_table() {
+        while (true) {
+            sleep(10000);
+        }
+    }
 </script>
 
 {% endblock %}
